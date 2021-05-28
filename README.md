@@ -48,14 +48,29 @@ Each model is specified with two separate files, a JSON formatted "options"
 file with hyperparameters and a hdf5 formatted file with the model
 weights.  Links to the pre-trained models are available [here](https://allennlp.org/elmo).
 
+我们提供了几个不同的使用英语进行预训练的biLMs供读者使用，[点击这里下载模型配置文件](https://allennlp.org/elmo)
+
+每个模型包含两个文件，一个是JSON格式的options文件，包含网络的超参数（网络层数，维度等）；另一个是hdf5格式的文件weights，包含模型的权重参数
 
 There are three ways to integrate ELMo representations into a downstream task, depending on your use case.
 
+你可以使用三种方法将ELMO集成到一个下游任务中，这取决于你的use case
+
 1. Compute representations on the fly from raw text using character input.  This is the most general method and will handle any input text.  It is also the most computationally expensive.
+
+1. 使用字符输入,并从原始文本计算representations。这是最通用的方法，并且可以处理任何文本数据。但同时也是计算代价最高的使用方式。
+
 2. Precompute and cache the context independent token representations, then compute context dependent representations using the biLSTMs for input data.  This method is less computationally expensive then #1, but is only applicable with a fixed, prescribed vocabulary.
+
+2. 预先计算并保存语境无关的token representations，然后用biLSTMs计算语境相关的token representations，这种使用方式的计算代价没有第一种高，但是只能用于固定的词汇。
+
 3.  Precompute the representations for your entire dataset and save to a file.
 
+3. 对你的整个数据集预计算，并保存成一个文件
+
 We have used all of these methods in the past for various use cases.  #1 is necessary for evaluating at test time on unseen data (e.g. public SQuAD leaderboard). #2 is a good compromise for large datasets where the size of the file in #3 is unfeasible (SNLI, SQuAD).  #3 is a good choice for smaller datasets or in cases where you'd like to use ELMo in other frameworks.
+
+我们已经在不用的用例中使用了上述三种方法。#3 是较小数据集的理想选择，或者是您想在其他框架中使用ELMo的情况。
 
 In all cases, the process roughly follows the same steps.
 First, create a `Batcher` (or `TokenBatcher` for #2) to translate tokenized strings to numpy arrays of character (or token) ids.
@@ -63,15 +78,30 @@ Then, load the pretrained ELMo model (class `BidirectionalLanguageModel`).
 Finally, for steps #1 and #2 use `weight_layers` to compute the final ELMo representations.
 For #3, use `BidirectionalLanguageModel` to write all the intermediate layers to a file.
 
+在所有的用例中，使用过程大致相同
+
+首先，创建一个Batcher(或者在#2中应使用TokenBatcher)，将单词化的字符串(`List\[str\]`)转换成character ids numpy数组或者token ids numpy数组。
+
+随后，加载预训练的ELMO模型(class `BidirectionalLanguageModel`)
+
+最后，对于#1和#2，使用`weight_layers`计算最后的ELMO representations.对于#3 使用 `BidirectionalLanguageModel`将所有隐层输出到一个文件中。
+
 #### Shape conventions
 Each tokenized sentence is a list of `str`, with a batch of sentences
 a list of tokenized sentences (`List[List[str]]`).
+
+每个句子是一个单词数组 (`List[str]`)，每个batch是一个句子数组 (`List[List[str]]`)
 
 The `Batcher` packs these into a shape
 `(n_sentences, max_sentence_length + 2, 50)` numpy array of character
 ids, padding on the right with 0 ids for sentences less then the maximum
 length.  The first and last tokens for each sentence are special
 begin and end of sentence ids added by the `Batcher`.
+
+`class Batcher`将一个batch转换为`(n_sentences, max_sentence_length + 2, 50)`大小的numpy character ids数组，
+
+每个句子的左右两侧会被`class Batcher`添加特殊的开始和结束标识符对应的character ids
+
 
 The input character id placeholder can be dimensioned `(None, None, 50)`,
 with both the batch dimension (axis=0) and time dimension (axis=1) determined
