@@ -37,6 +37,7 @@ python -m unittest discover tests/
 
 To run the image, you must use nvidia-docker, because this repository
 requires GPUs.
+
 必须使用nvidia-docker run 而不是 docker run
 ```
 sudo nvidia-docker run -t allennlp/bilm-tf:training-gpu
